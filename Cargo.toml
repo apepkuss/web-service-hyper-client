@@ -1,5 +1,5 @@
 [package]
-name = "rust-minimal-web-service-client"
+name = "web-service-hyper-client"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,3 +8,4 @@ tokio = { version = "1.11", features = ["full"] }
 hyper = { version = "0.14", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+xin = { path = "/Volumes/Dev/secondstate/me/xin" }
