@@ -2,35 +2,69 @@ use hyper::{Body, Client, Request, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-mod chat;
-use chat::{
-    ChatCompletionRequestMessage, ChatCompletionRequestRole, CreateChatCompletionRequest,
-    CreateChatCompletionRequestBuilder, CreateChatCompletionsRequestSampling,
+use xin::{
+    chat::{
+        ChatCompletionRequestMessage, ChatCompletionRequestRole, CreateChatCompletionRequest,
+        CreateChatCompletionRequestBuilder, CreateChatCompletionsRequestSampling,
+    },
+    completions::{CreateCompletionRequest, CreateCompletionRequestBuilder},
+    embeddings::{CreateEmbeddingsRequest, CreateEmbeddingsRequestBuilder},
 };
 
 static URL_SEND: &str = "http://localhost:8080/send";
 static URL_CHAT_COMPLETIONS: &str = "http://localhost:8080/v1/chat/completions";
+static URL_COMPLETIONS: &str = "http://localhost:8080/v1/completions";
+static URL_EMBEDDINGS: &str = "http://localhost:8080/v1/embeddings";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
-    // uri
-    let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
+    // CreateChatCompletionRequest
+    let _request = {
+        // uri
+        let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
+        // data
+        let data = create_chat_completions_request();
+        let data = json!(data);
+        // request
+        Request::builder()
+            .method("POST")
+            .uri(uri)
+            .header("CONTENT_TYPE", "application/json")
+            .body(Body::from(serde_json::to_string(&data)?))?
+    };
 
-    // create a request body
-    // let data = SendRequest {
-    //     name: "chip".to_string(),
-    //     active: true,
-    // };
-    let data = create_chat_completions_request();
-    let data = json!(data);
+    // CreateCompletionRequest
+    let _request = {
+        // uri
+        let uri = URL_COMPLETIONS.parse::<Uri>()?;
+        // data
+        let data = create_completion_request();
+        let data = json!(data);
+        // request
+        Request::builder()
+            .method("POST")
+            .uri(uri)
+            .header("CONTENT_TYPE", "application/json")
+            .body(Body::from(serde_json::to_string(&data)?))?
+    };
 
-    let request = Request::builder()
-        .method("POST")
-        .uri(uri)
-        .header("CONTENT_TYPE", "application/json")
-        .body(Body::from(serde_json::to_string(&data)?))?;
+    // CreateEmbeddingsRequest
+    let request = {
+        // uri
+        let uri = URL_EMBEDDINGS.parse::<Uri>()?;
+        // data
+        let data = create_embedding_request();
+        let data = json!(data);
+        dbg!(&data);
+        // request
+        Request::builder()
+            .method("POST")
+            .uri(uri)
+            .header("CONTENT_TYPE", "application/json")
+            .body(Body::from(serde_json::to_string(&data)?))?
+    };
 
     let response = client.request(request).await?;
     let status = response.status();
@@ -67,4 +101,16 @@ fn create_chat_completions_request() -> CreateChatCompletionRequest {
     let sampling = CreateChatCompletionsRequestSampling::Temperature(0.8);
 
     CreateChatCompletionRequestBuilder::new(model, messages, sampling).build()
+}
+
+fn create_completion_request() -> CreateCompletionRequest {
+    CreateCompletionRequestBuilder::new("text-davinci-003", "Say this is a test").build()
+}
+
+fn create_embedding_request() -> CreateEmbeddingsRequest {
+    CreateEmbeddingsRequestBuilder::new(
+        "text-embedding-ada-002",
+        vec![String::from("The food was delicious and the waiter...")],
+    )
+    .build()
 }
