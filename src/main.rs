@@ -4,11 +4,11 @@ use serde_json::json;
 
 use xin::{
     chat::{
-        ChatCompletionRequestMessage, ChatCompletionRequestRole, CreateChatCompletionRequest,
-        CreateChatCompletionRequestBuilder, CreateChatCompletionsRequestSampling,
+        ChatCompletionRequest, ChatCompletionRequestBuilder, ChatCompletionRequestMessage,
+        ChatCompletionRequestMessageRole, ChatCompletionRequestSampling,
     },
-    completions::{CreateCompletionRequest, CreateCompletionRequestBuilder},
-    embeddings::{CreateEmbeddingsRequest, CreateEmbeddingsRequestBuilder},
+    completions::{CompletionRequest, CompletionRequestBuilder},
+    embeddings::{EmbeddingsRequest, EmbeddingsRequestBuilder},
 };
 
 static URL_SEND: &str = "http://localhost:8080/send";
@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
     // CreateChatCompletionRequest
-    let _request = {
+    let request = {
         // uri
         let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
         // data
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     };
 
     // CreateEmbeddingsRequest
-    let request = {
+    let _request = {
         // uri
         let uri = URL_EMBEDDINGS.parse::<Uri>()?;
         // data
@@ -82,33 +82,34 @@ struct SendRequest {
     active: bool,
 }
 
-fn create_chat_completions_request() -> CreateChatCompletionRequest {
+fn create_chat_completions_request() -> ChatCompletionRequest {
     let model = "gpt-3.5-turbo";
     // create messages
     let mut messages: Vec<ChatCompletionRequestMessage> = vec![];
     messages.push(ChatCompletionRequestMessage {
-        role: ChatCompletionRequestRole::System,
+        role: ChatCompletionRequestMessageRole::System,
         content: String::from("You are a helpfule assistant."),
         name: None,
         function_call: None,
     });
     messages.push(ChatCompletionRequestMessage {
-        role: ChatCompletionRequestRole::User,
+        role: ChatCompletionRequestMessageRole::User,
         content: String::from("Hello!"),
         name: None,
         function_call: None,
     });
-    let sampling = CreateChatCompletionsRequestSampling::Temperature(0.8);
+    let sampling = ChatCompletionRequestSampling::Temperature(0.8);
 
-    CreateChatCompletionRequestBuilder::new(model, messages, sampling).build()
+    ChatCompletionRequestBuilder::new(model, messages, sampling).build()
 }
 
-fn create_completion_request() -> CreateCompletionRequest {
-    CreateCompletionRequestBuilder::new("text-davinci-003", "Say this is a test").build()
+fn create_completion_request() -> CompletionRequest {
+    CompletionRequestBuilder::new("text-davinci-003", vec![String::from("Say this is a test")])
+        .build()
 }
 
-fn create_embedding_request() -> CreateEmbeddingsRequest {
-    CreateEmbeddingsRequestBuilder::new(
+fn create_embedding_request() -> EmbeddingsRequest {
+    EmbeddingsRequestBuilder::new(
         "text-embedding-ada-002",
         vec![String::from("The food was delicious and the waiter...")],
     )
