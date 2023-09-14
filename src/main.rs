@@ -26,6 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // data
         let data = create_chat_request();
         let data = json!(data);
+
         // request
         Request::builder()
             .method("POST")
@@ -85,22 +86,13 @@ fn create_chat_request() -> ChatRequest {
     // create messages
     let mut messages: Vec<ChatRequestMessage> = vec![];
     messages.push(ChatRequestMessage {
-        role: ChatRequestRole::System,
-        content: String::from("You are a helpfule assistant."),
-        name: None,
-        function_call: None,
-    });
-    messages.push(ChatRequestMessage {
         role: ChatRequestRole::User,
-        content: String::from("Hello!"),
+        content: String::from("What is Bitcoin?"),
         name: None,
         function_call: None,
     });
-    let sampling = ChatRequestSampling::Temperature(0.8);
 
-    ChatRequestBuilder::new(model, messages)
-        .with_sampling(sampling)
-        .build()
+    ChatRequestBuilder::new(model, messages).build()
 }
 
 fn create_completion_request() -> CompletionRequest {
