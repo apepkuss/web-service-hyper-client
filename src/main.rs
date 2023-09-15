@@ -4,7 +4,8 @@ use serde_json::json;
 
 use xin::{
     chat::{
-        ChatRequest, ChatRequestBuilder, ChatRequestMessage, ChatRequestRole, ChatRequestSampling,
+        ChatCompletionRequest, ChatCompletionRequestBuilder, ChatCompletionRequestMessage,
+        ChatCompletionRequestSampling, ChatCompletionRole,
     },
     completions::{CompletionRequest, CompletionRequestBuilder},
     embeddings::{EmbeddingsRequest, EmbeddingsRequestBuilder},
@@ -19,7 +20,7 @@ static URL_EMBEDDINGS: &str = "http://localhost:8080/v1/embeddings";
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
-    // ChatRequest
+    // ChatCompletionRequest
     let request = {
         // uri
         let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
@@ -81,18 +82,18 @@ struct SendRequest {
     active: bool,
 }
 
-fn create_chat_request() -> ChatRequest {
+fn create_chat_request() -> ChatCompletionRequest {
     let model = "gpt-3.5-turbo";
     // create messages
-    let mut messages: Vec<ChatRequestMessage> = vec![];
-    messages.push(ChatRequestMessage {
-        role: ChatRequestRole::User,
+    let mut messages: Vec<ChatCompletionRequestMessage> = vec![];
+    messages.push(ChatCompletionRequestMessage {
+        role: ChatCompletionRole::User,
         content: String::from("What is Bitcoin?"),
         name: None,
         function_call: None,
     });
 
-    ChatRequestBuilder::new(model, messages).build()
+    ChatCompletionRequestBuilder::new(model, messages).build()
 }
 
 fn create_completion_request() -> CompletionRequest {
