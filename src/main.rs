@@ -25,17 +25,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let request = {
         // uri
         let uri = URL_ECHO.parse::<Uri>()?;
-        // data
-        let data = EchoRequest {
-            text: String::from("echo test"),
-        };
-        let data = json!(data);
+
         // request
         Request::builder()
             .method("POST")
             .uri(uri)
             .header("CONTENT_TYPE", "application/json")
-            .body(Body::from(serde_json::to_string(&data)?))?
+            .body(Body::empty())?
     };
 
     // ChatCompletionRequest
@@ -109,11 +105,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 struct SendRequest {
     name: String,
     active: bool,
-}
-
-#[derive(Deserialize, Serialize)]
-struct EchoRequest {
-    text: String,
 }
 
 fn create_chat_request() -> ChatCompletionRequest {
