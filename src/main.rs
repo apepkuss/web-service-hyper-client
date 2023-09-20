@@ -11,18 +11,25 @@ use xin::{
     embeddings::{EmbeddingsRequest, EmbeddingsRequestBuilder},
 };
 
-static URL_ECHO: &str = "http://localhost:8080/echo";
-static URL_OPENAI_CHAT_COMPLETIONS: &str = "http://localhost:8080/openai/v1/chat/completions";
-static URL_OPENAI_COMPLETIONS: &str = "http://localhost:8080/openai/v1/completions";
-static URL_OPENAI_EMBEDDINGS: &str = "http://localhost:8080/openai/v1/embeddings";
-static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://localhost:8080/llama/v1/chat/completions";
+// static URL_ECHO: &str = "http://localhost:8080/echo";
+static URL_ECHO: &str = "http://52.40.2.252:3000/echo";
+// static URL_CHAT_COMPLETIONS: &str = "http://localhost:8080/v1/chat/completions";
+static URL_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/v1/chat/completions";
+// static URL_OPENAI_COMPLETIONS: &str = "http://localhost:8080/openai/v1/completions";
+static URL_OPENAI_COMPLETIONS: &str = "http://34.217.109.23:3000/openai/v1/completions";
+// static URL_OPENAI_EMBEDDINGS: &str = "http://localhost:8080/openai/v1/embeddings";
+static URL_OPENAI_EMBEDDINGS: &str = "http://34.217.109.23:3000/openai/v1/embeddings";
+// static URL_OPENAI_MODELS: &str = "http://34.217.109.23:3000/openai/v1/models";
+static URL_MODELS: &str = "http://localhost:8080/v1/models";
+// static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://localhost:8080/llama/v1/chat/completions";
+static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/llama/v1/chat/completions";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
     // echo test
-    let request = {
+    let _request = {
         // uri
         let uri = URL_ECHO.parse::<Uri>()?;
 
@@ -35,9 +42,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     };
 
     // ChatCompletionRequest
-    let _request = {
+    let request = {
         // uri
-        let uri = URL_OPENAI_CHAT_COMPLETIONS.parse::<Uri>()?;
+        let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
         // data
         let data = create_chat_request();
         let data = json!(data);
@@ -83,7 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // models
     let _request = {
         // uri
-        let uri = "http://localhost:8080/openai/v1/models".parse::<Uri>()?;
+        let uri = URL_MODELS.parse::<Uri>()?;
         // request
         Request::builder()
             .method("GET")
@@ -91,12 +98,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             .body(Body::empty())?
     };
 
+    // LlamaChatCompletionRequest
+    let _request = {
+        // uri
+        let uri = URL_LLAMA_CHAT_COMPLETIONS.parse::<Uri>()?;
+        // data
+        let data = create_llama_chat_request();
+        let data = json!(data);
+
+        // request
+        Request::builder()
+            .method("POST")
+            .uri(uri)
+            .header("CONTENT_TYPE", "application/json")
+            .body(Body::from(serde_json::to_string(&data)?))?
+    };
+
     let response = client.request(request).await?;
     let status = response.status();
-    let body = hyper::body::to_bytes(response.into_body()).await?;
-
     println!("Status: {}", status);
-    println!("Body: {:?}", body);
+
+    let body_bytes = hyper::body::to_bytes(response.into_body()).await?;
+    // let data: xin::chat::ChatCompletionRequest = serde_json::from_slice(&body_bytes).unwrap();
+    // let model_answer = data.messages[0].content.as_str();
+    let model_answer = String::from_utf8(body_bytes.to_vec()).unwrap();
+    println!("model_answer: {:?}", model_answer);
 
     Ok(())
 }
@@ -132,4 +158,19 @@ fn create_embedding_request() -> EmbeddingsRequest {
         vec![String::from("The food was delicious and the waiter...")],
     )
     .build()
+}
+
+fn create_llama_chat_request() -> ChatCompletionRequest {
+    let model = "";
+
+    // create messages
+    let mut messages: Vec<ChatCompletionRequestMessage> = vec![];
+    messages.push(ChatCompletionRequestMessage {
+        role: ChatCompletionRole::User,
+        content: String::from("What is Bitcoin?"),
+        name: None,
+        function_call: None,
+    });
+
+    ChatCompletionRequestBuilder::new(model, messages).build()
 }
