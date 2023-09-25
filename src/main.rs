@@ -1,9 +1,6 @@
 use hyper::{Body, Client, Request, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use std::io::{self, BufRead};
-
 use xin::{
     chat::{
         ChatCompletionRequest, ChatCompletionRequestBuilder, ChatCompletionRequestMessage,
@@ -14,17 +11,17 @@ use xin::{
 };
 
 // static URL_ECHO: &str = "http://localhost:8080/echo";
-static URL_ECHO: &str = "http://52.40.2.252:3000/echo";
+static _URL_ECHO: &str = "http://52.40.2.252:3000/echo";
 // static URL_CHAT_COMPLETIONS: &str = "http://localhost:8080/v1/chat/completions";
 static URL_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/v1/chat/completions";
 // static URL_OPENAI_COMPLETIONS: &str = "http://localhost:8080/openai/v1/completions";
-static URL_OPENAI_COMPLETIONS: &str = "http://34.217.109.23:3000/openai/v1/completions";
+static _URL_OPENAI_COMPLETIONS: &str = "http://34.217.109.23:3000/openai/v1/completions";
 // static URL_OPENAI_EMBEDDINGS: &str = "http://localhost:8080/openai/v1/embeddings";
-static URL_OPENAI_EMBEDDINGS: &str = "http://34.217.109.23:3000/openai/v1/embeddings";
+static _URL_OPENAI_EMBEDDINGS: &str = "http://34.217.109.23:3000/openai/v1/embeddings";
 // static URL_OPENAI_MODELS: &str = "http://34.217.109.23:3000/openai/v1/models";
-static URL_MODELS: &str = "http://localhost:8080/v1/models";
+static _URL_MODELS: &str = "http://localhost:8080/v1/models";
 // static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://localhost:8080/llama/v1/chat/completions";
-static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/llama/v1/chat/completions";
+static _URL_LLAMA_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/llama/v1/chat/completions";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -40,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // let input = read_input();
 
         let mut user_message = String::new();
-        io::stdin()
+        std::io::stdin()
             .read_line(&mut user_message)
             .ok()
             .expect("Failed to read line");
@@ -98,20 +95,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-fn read_input() -> String {
-    loop {
-        let mut user_message = String::new();
-        io::stdin()
-            .read_line(&mut user_message)
-            .ok()
-            .expect("Failed to read line");
-
-        if !user_message.is_empty() && user_message != "\n" && user_message != "\r\n" {
-            return user_message;
-        }
-    }
-}
-
 #[derive(Deserialize, Serialize)]
 struct SendRequest {
     name: String,
@@ -132,12 +115,12 @@ fn create_chat_request(prompt: &str) -> ChatCompletionRequest {
     ChatCompletionRequestBuilder::new(model, messages).build()
 }
 
-fn create_completion_request() -> CompletionRequest {
+fn _create_completion_request() -> CompletionRequest {
     CompletionRequestBuilder::new("text-davinci-003", vec![String::from("Say this is a test")])
         .build()
 }
 
-fn create_embedding_request() -> EmbeddingsRequest {
+fn _create_embedding_request() -> EmbeddingsRequest {
     EmbeddingsRequestBuilder::new(
         "text-embedding-ada-002",
         vec![String::from("The food was delicious and the waiter...")],
@@ -145,7 +128,7 @@ fn create_embedding_request() -> EmbeddingsRequest {
     .build()
 }
 
-fn create_llama_chat_request() -> ChatCompletionRequest {
+fn _create_llama_chat_request() -> ChatCompletionRequest {
     let model = "";
 
     // create messages
@@ -158,4 +141,18 @@ fn create_llama_chat_request() -> ChatCompletionRequest {
     });
 
     ChatCompletionRequestBuilder::new(model, messages).build()
+}
+
+fn _read_input() -> String {
+    loop {
+        let mut user_message = String::new();
+        std::io::stdin()
+            .read_line(&mut user_message)
+            .ok()
+            .expect("Failed to read line");
+
+        if !user_message.is_empty() && user_message != "\n" && user_message != "\r\n" {
+            return user_message;
+        }
+    }
 }
