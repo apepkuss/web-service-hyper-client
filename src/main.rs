@@ -10,18 +10,7 @@ use xin::{
     embeddings::{EmbeddingsRequest, EmbeddingsRequestBuilder},
 };
 
-// static URL_ECHO: &str = "http://localhost:8080/echo";
-static _URL_ECHO: &str = "http://52.40.2.252:3000/echo";
-// static URL_CHAT_COMPLETIONS: &str = "http://localhost:8080/v1/chat/completions";
-static URL_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/v1/chat/completions";
-// static URL_OPENAI_COMPLETIONS: &str = "http://localhost:8080/openai/v1/completions";
-static _URL_OPENAI_COMPLETIONS: &str = "http://34.217.109.23:3000/openai/v1/completions";
-// static URL_OPENAI_EMBEDDINGS: &str = "http://localhost:8080/openai/v1/embeddings";
-static _URL_OPENAI_EMBEDDINGS: &str = "http://34.217.109.23:3000/openai/v1/embeddings";
-// static URL_OPENAI_MODELS: &str = "http://34.217.109.23:3000/openai/v1/models";
-static _URL_MODELS: &str = "http://localhost:8080/v1/models";
-// static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://localhost:8080/llama/v1/chat/completions";
-static _URL_LLAMA_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/llama/v1/chat/completions";
+static URL_CHAT_COMPLETIONS: &str = "http://localhost:8080/v1/chat/completions";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -33,8 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Enter some text (or press Ctrl + Q to exit):");
 
     loop {
-        println!("[Question]:");
-        // let input = read_input();
+        println!("[Question]");
 
         let mut user_message = String::new();
         std::io::stdin()
