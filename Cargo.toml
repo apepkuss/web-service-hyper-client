@@ -1,5 +1,5 @@
 [package]
-name = "web-service-hyper-client"
+name = "llm-web-api-client"
 version = "0.1.0"
 edition = "2021"
 
