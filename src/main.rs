@@ -2,6 +2,8 @@ use hyper::{Body, Client, Request, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use std::io::{self, BufRead};
+
 use xin::{
     chat::{
         ChatCompletionRequest, ChatCompletionRequestBuilder, ChatCompletionRequestMessage,
@@ -28,103 +30,86 @@ static URL_LLAMA_CHAT_COMPLETIONS: &str = "http://52.40.2.252:3000/llama/v1/chat
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Client::new();
 
-    // echo test
-    let _request = {
-        // uri
-        let uri = URL_ECHO.parse::<Uri>()?;
+    let system_prompt = String::from("<<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as short as possible, while being safe. <</SYS>>\n\n");
+    let mut prompt = String::new();
 
-        // request
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header("CONTENT_TYPE", "application/json")
-            .body(Body::empty())?
-    };
+    println!("Enter some text (or press Ctrl + Q to exit):");
 
-    // ChatCompletionRequest
-    let request = {
-        // uri
-        let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
-        // data
-        let data = create_chat_request();
-        let data = json!(data);
+    loop {
+        println!("[Question]:");
+        // let input = read_input();
 
-        // request
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header("CONTENT_TYPE", "application/json")
-            .body(Body::from(serde_json::to_string(&data)?))?
-    };
+        let mut user_message = String::new();
+        io::stdin()
+            .read_line(&mut user_message)
+            .ok()
+            .expect("Failed to read line");
 
-    // CreateCompletionRequest
-    let _request = {
-        // uri
-        let uri = URL_OPENAI_COMPLETIONS.parse::<Uri>()?;
-        // data
-        let data = create_completion_request();
-        let data = json!(data);
-        // request
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header("CONTENT_TYPE", "application/json")
-            .body(Body::from(serde_json::to_string(&data)?))?
-    };
+        if user_message.trim() == "\u{11}" {
+            break;
+        }
 
-    // CreateEmbeddingsRequest
-    let _request = {
-        // uri
-        let uri = URL_OPENAI_EMBEDDINGS.parse::<Uri>()?;
-        // data
-        let data = create_embedding_request();
-        let data = json!(data);
-        // request
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header("CONTENT_TYPE", "application/json")
-            .body(Body::from(serde_json::to_string(&data)?))?
-    };
+        if user_message.is_empty() || user_message == "\n" || user_message == "\r\n" {
+            continue;
+        }
 
-    // models
-    let _request = {
-        // uri
-        let uri = URL_MODELS.parse::<Uri>()?;
-        // request
-        Request::builder()
-            .method("GET")
-            .uri(uri)
-            .body(Body::empty())?
-    };
+        // dbg!(user_message.trim());
 
-    // LlamaChatCompletionRequest
-    let _request = {
-        // uri
-        let uri = URL_LLAMA_CHAT_COMPLETIONS.parse::<Uri>()?;
-        // data
-        let data = create_llama_chat_request();
-        let data = json!(data);
+        if prompt == "" {
+            prompt = format!(
+                "<s>[INST] {} {} [/INST]",
+                system_prompt,
+                user_message.trim()
+            );
+        } else {
+            prompt = format!("{}<s>[INST] {} [/INST]", prompt, user_message.trim());
+        }
 
-        // request
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header("CONTENT_TYPE", "application/json")
-            .body(Body::from(serde_json::to_string(&data)?))?
-    };
+        // println!("\n*** [prompt begin] ***");
+        // println!("{}", &prompt);
+        // println!("*** [prompt end] ***\n\n");
 
-    let response = client.request(request).await?;
-    let status = response.status();
-    println!("Status: {}", status);
+        // ChatCompletionRequest
+        let request = {
+            // uri
+            let uri = URL_CHAT_COMPLETIONS.parse::<Uri>()?;
+            // data
+            let data = create_chat_request(&prompt);
+            let data = json!(data);
 
-    let body_bytes = hyper::body::to_bytes(response.into_body()).await?;
-    // let data: xin::chat::ChatCompletionRequest = serde_json::from_slice(&body_bytes).unwrap();
-    // let model_answer = data.messages[0].content.as_str();
-    let model_answer = String::from_utf8(body_bytes.to_vec()).unwrap();
-    println!("model_answer: {:?}", model_answer);
+            // request
+            Request::builder()
+                .method("POST")
+                .uri(uri)
+                .header("CONTENT_TYPE", "application/json")
+                .body(Body::from(serde_json::to_string(&data)?))?
+        };
+
+        let response = client.request(request).await?;
+
+        let body_bytes = hyper::body::to_bytes(response.into_body()).await?;
+        let model_answer = String::from_utf8(body_bytes.to_vec()).unwrap();
+        let answer = model_answer.trim();
+        println!("[answer] {answer}", answer = answer);
+
+        prompt = format!("{} {} </s>", prompt, model_answer.trim());
+    }
 
     Ok(())
+}
+
+fn read_input() -> String {
+    loop {
+        let mut user_message = String::new();
+        io::stdin()
+            .read_line(&mut user_message)
+            .ok()
+            .expect("Failed to read line");
+
+        if !user_message.is_empty() && user_message != "\n" && user_message != "\r\n" {
+            return user_message;
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -133,13 +118,13 @@ struct SendRequest {
     active: bool,
 }
 
-fn create_chat_request() -> ChatCompletionRequest {
+fn create_chat_request(prompt: &str) -> ChatCompletionRequest {
     let model = "gpt-3.5-turbo";
     // create messages
     let mut messages: Vec<ChatCompletionRequestMessage> = vec![];
     messages.push(ChatCompletionRequestMessage {
         role: ChatCompletionRole::User,
-        content: String::from("What is Bitcoin?"),
+        content: String::from(prompt),
         name: None,
         function_call: None,
     });
